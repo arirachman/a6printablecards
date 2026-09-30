@@ -10,4 +10,5 @@ why buy small papers when you can slice big ones, why use gdocs, msword, or what
 8. You want to undo things? sadly you can't honey. there's no coming back
 
 code assisted with AI
+
 contributions are open only if you have the same quirks
