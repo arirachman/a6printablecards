@@ -4,3 +4,4 @@ why buy small papers when you can slice big ones, why use gdocs, msword, or what
 2. type your text
 3. you want more pages? hit add page
 4. print, then follow the dashed line with scissors
+code assisted with AI
