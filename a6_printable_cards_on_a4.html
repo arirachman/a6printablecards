@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A6 Printable Cards with Font Controls</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        /* Print specific styles to enforce A4 landscape and remove margins */
+        @page {
+            size: A4 landscape;
+            margin: 0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f3f4f6; /* gray-100 */
+            font-family: 'Inter', sans-serif, Arial;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* The main A4 container */
+        .page {
+            width: 297mm;
+            height: 210mm;
+            background: white;
+            margin: 20px 0;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            page-break-after: always;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        /* Individual A6 card (Quadrant) wrapper */
+        .card-wrapper {
+            position: relative;
+            box-sizing: border-box;
+            border-right: 1px dashed #9ca3af;
+            border-bottom: 1px dashed #9ca3af;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Clean up outer borders */
+        .card-wrapper:nth-child(2n) { border-right: none; }
+        .card-wrapper:nth-child(3), .card-wrapper:nth-child(4) { border-bottom: none; }
+
+        /* Editable text area */
+        .card-content {
+            flex-grow: 1;
+            padding: 15mm; 
+            outline: none;
+            overflow-y: auto;
+            /* Default font size set via inline style in JS, but fallback here */
+            font-size: 10.5pt; 
+        }
+
+        .card-content:empty:before {
+            content: "Click to add text...";
+            color: #9ca3af;
+            pointer-events: none;
+            display: block;
+        }
+
+        /* Print visibility controls */
+        @media print {
+            body {
+                background: none;
+                margin: 0;
+            }
+            .page {
+                margin: 0;
+                box-shadow: none;
+                page-break-after: always;
+            }
+            .no-print {
+                display: none !important;
+            }
+            html, body {
+                width: 297mm;
+                height: 210mm;
+            }
+            /* Ensure content doesn't scroll in print */
+            .card-content {
+                overflow: hidden;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Global Controls (Hidden on Print) -->
+    <div class="controls no-print fixed top-0 left-0 w-full bg-slate-800 text-white p-4 shadow-lg z-50 flex justify-center gap-6">
+        <button id="add-page-btn" class="bg-blue-600 hover:bg-blue-500 transition-colors px-6 py-2 rounded font-medium shadow flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            Add Page (4 Cards)
+        </button>
+        <button id="print-btn" class="bg-emerald-600 hover:bg-emerald-500 transition-colors px-6 py-2 rounded font-medium shadow flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" />
+            </svg>
+            Print
+        </button>
+    </div>
+
+    <!-- Spacer to offset the fixed header on screen -->
+    <div class="no-print h-20 w-full"></div>
+
+    <!-- Container for dynamic pages -->
+    <div id="document-container" class="flex flex-col items-center w-full">
+        <!-- Pages injected here -->
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('document-container');
+            const addPageBtn = document.getElementById('add-page-btn');
+            const printBtn = document.getElementById('print-btn');
+
+            /**
+             * Creates a new A4 page element containing 4 A6 quadrants with font controls.
+             */
+            function createPage() {
+                const page = document.createElement('div');
+                page.className = 'page';
+                
+                // Create 4 quadrants
+                for (let i = 0; i < 4; i++) {
+                    const wrapper = document.createElement('div');
+                    // Add tailwind group class to show/hide controls on hover
+                    wrapper.className = 'card-wrapper group'; 
+                    
+                    // The actual editable text container
+                    const content = document.createElement('div');
+                    content.className = 'card-content';
+                    content.contentEditable = true;
+                    content.style.fontSize = '10.5pt';
+                    content.innerHTML = `
+                        <div style="font-weight: bold; margin-bottom: 8px;">Card Title</div>
+                        <div>Start typing your content here...</div>
+                    `;
+
+                    // The floating font controls (visible on hover, hidden on print)
+                    const controls = document.createElement('div');
+                    controls.className = 'no-print absolute bottom-4 right-4 flex items-center gap-2 bg-white/90 shadow-md border border-gray-200 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm';
+                    
+                    const decreaseBtn = document.createElement('button');
+                    decreaseBtn.className = 'w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-lg font-bold transition-colors';
+                    decreaseBtn.innerText = '-';
+                    decreaseBtn.title = 'Decrease Font Size';
+                    
+                    const sizeLabel = document.createElement('span');
+                    sizeLabel.className = 'text-xs font-semibold text-gray-600 w-12 text-center pointer-events-none';
+                    sizeLabel.innerText = '10.5pt';
+                    
+                    const increaseBtn = document.createElement('button');
+                    increaseBtn.className = 'w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-lg font-bold transition-colors';
+                    increaseBtn.innerText = '+';
+                    increaseBtn.title = 'Increase Font Size';
+
+                    // Logic to change font size
+                    const changeFontSize = (delta) => {
+                        // Extract current size (e.g. "10.5pt" -> 10.5)
+                        let currentSize = parseFloat(content.style.fontSize) || 10.5;
+                        let newSize = Math.max(5, currentSize + delta); // Set a minimum of 5pt
+                        
+                        // Prevent sizes from getting ridiculously huge
+                        newSize = Math.min(72, newSize); 
+                        
+                        content.style.fontSize = `${newSize.toFixed(1)}pt`;
+                        
+                        // Strip trailing .0 for cleaner display (e.g. 11.0 -> 11)
+                        sizeLabel.innerText = `${Number(newSize.toFixed(1))}pt`;
+                    };
+
+                    decreaseBtn.addEventListener('click', () => changeFontSize(-0.5));
+                    increaseBtn.addEventListener('click', () => changeFontSize(0.5));
+
+                    // Assemble controls
+                    controls.appendChild(decreaseBtn);
+                    controls.appendChild(sizeLabel);
+                    controls.appendChild(increaseBtn);
+
+                    // Assemble card
+                    wrapper.appendChild(content);
+                    wrapper.appendChild(controls);
+                    page.appendChild(wrapper);
+                }
+                
+                container.appendChild(page);
+                
+                // Scroll to the new page if it's not the first one
+                if (container.children.length > 1) {
+                    page.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }
+            }
+
+            // Global Event Listeners
+            addPageBtn.addEventListener('click', createPage);
+            
+            printBtn.addEventListener('click', () => {
+                window.print();
+            });
+
+            // Initialize document
+            createPage();
+        });
+    </script>
+</body>
+</html>

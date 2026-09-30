@@ -3,6 +3,7 @@ why buy small papers when you can slice big ones, why use gdocs, msword, or what
 1. Download it, open in your-hundreds of tabs opened-browser
 2. type your text
 3. you want more pages? hit add page
+4. text size too small for 10.5 pt? no problem. adjust the text size with hover-reveal control.
 4. print, then follow the dashed line with scissors
 
 code assisted with AI
